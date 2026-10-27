@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ivan & James 對話練習</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow script column, each line a tappable row like a printed handout */
+:root{
+  --bg:#f3f6f9; --paper:#ffffff; --ink:#0f2a44; --muted:#5b6f84; --line:#dbe3eb;
+  --accent:#1f6f9a; --accent-soft:#e3f0f7; --ivan:#1f6f9a; --james:#8a5a1f;
+  --serif:"Literata",Georgia,"Times New Roman",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1720; --paper:#16212d; --ink:#e4ecf3; --muted:#9aabbc; --line:#263546;
+  --accent:#6cb6de; --accent-soft:#1b3346; --ivan:#6cb6de; --james:#e0b07a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1720; --paper:#16212d; --ink:#e4ecf3; --muted:#9aabbc; --line:#263546;
+  --accent:#6cb6de; --accent-soft:#1b3346; --ivan:#6cb6de; --james:#e0b07a; color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(24px,5vw,32px);line-height:1.2;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:14px;margin:0;line-height:1.6}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--paper);border-radius:999px;padding:8px 18px;font-size:14px;font-weight:500}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.speed{display:flex;gap:4px;margin-left:auto;font-size:13px;color:var(--muted);align-items:center}
+.speed button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;padding:4px 9px;font-size:13px;font-variant-numeric:tabular-nums}
+.speed button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.script{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:64px 1fr 28px;gap:4px 12px;width:100%;text-align:left;border:0;background:transparent;color:inherit;
+  padding:14px 16px;border-top:1px solid var(--line);position:relative}
+.row:first-child{border-top:0}
+.row:hover:not([disabled]){background:var(--accent-soft)}
+.row[disabled]{cursor:default}
+.who{font-family:var(--serif);font-weight:600;font-size:15px;padding-top:1px}
+.who.ivan{color:var(--ivan)} .who.james{color:var(--james)}
+.txt{min-width:0;display:flex;flex-direction:column;gap:4px}
+.en{font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.55}
+.zh{font-size:14px;color:var(--muted);line-height:1.6}
+.note{font-size:12px;color:var(--muted);font-style:normal}
+.icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);align-self:start}
+.icon svg{width:12px;height:12px;fill:currentColor}
+.row[disabled] .icon{opacity:.35}
+.row.playing{background:var(--accent-soft)}
+.row.playing .icon{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.prog{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);width:0}
+@media (max-width:480px){.row{grid-template-columns:52px 1fr 28px}.speed{margin-left:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Unit 3 · 2nd Conversation</span>
+    <h1>How’s Your Job Hunt Going?</h1>
+    <p class="sub">點任何一句英文，就會播放那一句的錄音。再點一次可停止。</p>
+  </header>
+  <div class="bar">
+    <button class="btn" id="playAll" type="button">從頭播放全部</button>
+    <button class="btn ghost" id="stop" type="button">停止</button>
+    <div class="speed" role="group" aria-label="播放速度">速度
+      <button type="button" id="sp075" data-r="0.75" aria-pressed="false">0.75×</button>
+      <button type="button" id="sp1" data-r="1" aria-pressed="true">1×</button>
+      <button type="button" id="sp125" data-r="1.25" aria-pressed="false">1.25×</button>
+    </div>
+  </div>
+  <div class="script" id="script"></div>
+</div>
+
+<audio id="aud" preload="auto" src="conversation2.mp3"></audio>
+
+<script>
+const LINES=[
+ {w:"Ivan",en:"How’s your job hunt going?",zh:"工作找得怎麼樣了？",s:0,e:1.2},
+ {w:"James",en:"It’s progressing fine. I just polished my résumé, so now I need to start casting a wider net and applying to more positions to increase my chances.",zh:"進展還算順利。我剛把履歷修好，接下來要擴大範圍、多投一些職缺，提高錄取機會。",s:1.2,e:9.35},
+ {w:"Ivan",en:"That sounds like a good plan. Have you gotten any interviews yet?",zh:"聽起來是個好計畫。有拿到面試了嗎？",s:9.4,e:12.8},
+ {w:"James",en:"Not yet, but I’m hoping to hear back soon. I think my next step is polishing my cover letters. I need to make them more compelling.",zh:"還沒，不過希望很快會有消息。我想下一步是好好修改求職信，讓它們更有說服力。",s:12.85,e:20.75},
+ {w:"Ivan",en:"That’s a great idea. A strong cover letter can really be a game changer. Are you targeting any specific companies or industries?",zh:"好主意。一封出色的求職信真的能扭轉局勢。你有鎖定特定的公司或產業嗎？",s:20.8,e:28.3},
+ {w:"James",en:"I do have a few in mind, but I’m trying to stay open to different opportunities. Mainly, I’m focusing on roles that align with my skills and interests.",zh:"心裡是有幾個目標，但我也盡量對不同機會保持開放。基本上，我主要鎖定跟自己專長和興趣相符的職位。",s:28.3,e:36.9},
+ {w:"Ivan",en:"That makes sense. Have you been networking at all? Sometimes connections can help speed things up. One of the fastest ways to get your foot in the door.",zh:"有道理。那你有在經營人脈嗎？有時候靠關係能讓事情進展得更快，這可是踏進門檻最快的方法之一。",s:36.9,e:45.2},
+ {w:"James",en:"A little bit, but I definitely need to ramp that up. I’ve reached out to a few people on LinkedIn, but I haven’t heard much back yet.",zh:"有一點，但肯定得再加把勁。我在 LinkedIn 上聯絡了幾個人，不過到現在還沒什麼回應。",s:45.25,e:52.3},
+ {w:"Ivan",en:"That’s completely normal. Sometimes it takes a while, but following up can help. If you are open to it, I can introduce you to a couple of friends who work in your field.",zh:"這很正常，有時候就是需要點時間，不過主動追蹤一下會有幫助。如果你願意的話，我可以介紹幾個在你這行工作的朋友給你認識。",s:52.3,e:61.95},
+ {w:"James",en:"That would be awesome! I really appreciate that.",zh:"那就太棒了！真的很感謝你。",s:62.0,e:64.95},
+ {w:"Ivan",en:"No problem! I’ll send you their contact info later. In the meantime, let me know if you want me to take a look at your résumé or cover letter.",zh:"小事一樁！我晚點把他們的聯絡方式傳給你。在那之前，如果需要我幫你看看履歷或求職信，儘管說。",s:64.95,e:72.3},
+ {w:"James",en:"Thanks! I’ll definitely take you up on that.",zh:"謝啦！我一定會找你幫忙的。",s:72.3,e:null}
+];
+const aud=document.getElementById('aud'), box=document.getElementById('script');
+const PLAY='<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg>', STOP='<svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg>';
+let cur=-1, all=false;
+LINES.forEach((l,i)=>{
+  const b=document.createElement('button');
+  b.type='button';b.className='row';b.id='line'+i;
+  if(l.s===null){b.disabled=true}
+  b.innerHTML=`<span class="who ${l.w.toLowerCase()}">${l.w}:</span><span class="txt"><span class="en">${l.en}</span><span class="zh">${l.zh}</span>${l.s===null?'<span class="note">這句不在你錄的音檔裡（錄音從 James 的回答開始）。</span>':''}</span><span class="icon">${PLAY}</span><span class="prog"></span>`;
+  b.addEventListener('click',()=>{ if(cur===i){stop();return} all=false; play(i) });
+  box.appendChild(b);
+});
+const rows=[...box.children];
+function endOf(i){return LINES[i].e ?? aud.duration}
+function mark(i){rows.forEach((r,k)=>{r.classList.toggle('playing',k===i);r.querySelector('.icon').innerHTML=k===i?STOP:PLAY;r.querySelector('.prog').style.width='0'})}
+function play(i){cur=i;mark(i);aud.currentTime=LINES[i].s;aud.play().catch(()=>{});rows[i].scrollIntoView({block:'nearest',behavior:'smooth'})}
+function stop(){aud.pause();cur=-1;all=false;mark(-1)}
+function tick(){check();requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+function check(){
+  if(cur<0||aud.paused)return;
+  const l=LINES[cur], e=endOf(cur);
+  rows[cur].querySelector('.prog').style.width=Math.min(100,(aud.currentTime-l.s)/(e-l.s)*100)+'%';
+  if(aud.currentTime>=e-0.02){
+    if(all && cur<LINES.length-1){cur++;mark(cur);rows[cur].scrollIntoView({block:'nearest',behavior:'smooth'})}
+    else stop();
+  }
+}
+aud.addEventListener('ended',stop);
+document.getElementById('playAll').onclick=()=>{all=true;play(1)};
+document.getElementById('stop').onclick=stop;
+document.querySelectorAll('.speed button[data-r]').forEach(b=>b.onclick=()=>{
+  aud.playbackRate=+b.dataset.r;
+  document.querySelectorAll('.speed button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+});
+</script>
+
+</body>
+</html>
